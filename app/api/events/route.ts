@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest } from 'next/server';
-import { createPublicClient, http, defineChain } from 'viem';
+import { createPublicClient, http, defineChain, keccak256, toBytes } from 'viem';
 import { SDK } from '@somnia-chain/reactivity';
 
 const somniaTestnet = defineChain({
@@ -20,6 +20,11 @@ const somniaTestnet = defineChain({
     },
   },
 });
+
+// Define the correct event signature for QuestClaimed
+const QUEST_CLAIMED_TOPIC = keccak256(
+  toBytes('QuestClaimed(address,uint256,uint256)')
+);
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +46,7 @@ export async function GET(req: NextRequest) {
           eventContractSources: [
             process.env.NEXT_PUBLIC_QUEST_REGISTRY as `0x${string}`,
           ],
+          topicOverrides: [QUEST_CLAIMED_TOPIC],
           onData: (data: any) => {
             try {
               console.log('=== SERVER EVENT ===', JSON.stringify(data));
@@ -57,7 +63,7 @@ export async function GET(req: NextRequest) {
                 questId,
                 timestamp: Math.floor(Date.now() / 1000),
                 blockNumber,
-              };
+              }; 
 
               console.log('Sending event to client:', event);
               const message = `data: ${JSON.stringify(event)}\n\n`;
