@@ -2,10 +2,10 @@ import { Stats } from '@/lib/types';
 
 export default function StatsBar({ stats }: { stats: Stats }) {
   const cards = [
-    { label: 'TOTAL', value: stats.total, color: '#c8d6e5' },
-    { label: 'SAFE', value: stats.safe, color: '#00ff9d' },
-    { label: 'SUSPICIOUS', value: stats.suspicious, color: '#f59e0b' },
-    { label: 'FLAGGED', value: stats.flagged, color: '#ef4444' },
+    { label: 'TOTAL', value: stats.total, color: 'var(--text-primary)', glow: '' },
+    { label: 'SAFE', value: stats.safe, color: 'var(--accent-teal)', glow: 'glow-teal' },
+    { label: 'SUSPICIOUS', value: stats.suspicious, color: 'var(--accent-amber)', glow: '' },
+    { label: 'FLAGGED', value: stats.flagged, color: 'var(--accent-red)', glow: stats.flagged > 0 ? 'glow-red' : '' },
   ];
 
   return (
@@ -13,33 +13,39 @@ export default function StatsBar({ stats }: { stats: Stats }) {
       display: 'grid',
       gridTemplateColumns: 'repeat(4, 1fr)',
       gap: 12,
-      marginBottom: 24,
-    }}>
+      marginBottom: 20,
+    }} className="stats-grid">
       {cards.map((card) => (
-        <div key={card.label} style={{
-          padding: '16px 20px',
-          border: `1px solid ${card.color}22`,
-          borderRadius: 8,
-          background: `${card.color}08`,
+        <div key={card.label} className={`glass-card-static ${card.glow}`} style={{
+          padding: '20px',
         }}>
           <div style={{
-            fontSize: 10,
-            color: '#4a6080',
+            fontSize: 11,
+            color: 'var(--text-muted)',
             letterSpacing: 2,
-            marginBottom: 8,
+            marginBottom: 10,
           }}>
             {card.label}
           </div>
           <div style={{
-            fontSize: 28,
+            fontSize: 32,
             fontWeight: 700,
             color: card.color,
-            fontFamily: 'monospace',
+            fontFamily: 'var(--font-geist-mono), monospace',
+            lineHeight: 1,
           }}>
             {card.value}
           </div>
         </div>
       ))}
+
+      <style>{`
+        @media (max-width: 768px) {
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
