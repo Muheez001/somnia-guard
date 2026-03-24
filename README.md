@@ -2,7 +2,7 @@
 
 **Real-time Bot & Sybil Detection for the Somnia Reactivity Hackathon 2026**
 
-![Somnia Guard Mascot](/Public/mascot.png)
+![Somnia Guard Banner](/Public/banner.png)
 
 ## 🌐 Overview
 Somnia Guard is a real-time on-chain security dashboard designed to protect quests, airdrops, and fair-mints on the **Somnia Network**. Traditional Sybil detection often relies on post-transaction indexing, allowing malicious bots to extract value before they are even flagged. 
@@ -11,7 +11,12 @@ By leveraging the **Somnia Reactivity SDK**, Somnia Guard intercepts events *bef
 
 ## ✨ Key Features
 - **⚡ Real-time Event Streaming**: Uses Somnia's Reactivity SDK via WebSocket transport to push `QuestRegistry` events to the dashboard as they happen.
-- **🧠 Heuristic Risk Engine**: Evaluates wallets based on transaction velocity, account age (nonce/txCount), STT balance, and historical cluster behavior.
+- **🧠 Heuristic Risk Engine**: Evaluates wallets using multi-layered analysis including:
+    - **Ephemeral Detection**: Flags extremely new wallets.
+    - **Behavioral Velocity**: Monitors rapid claim bursts within short time windows.
+    - **Block-Level Coordination**: Detects groups of wallets claiming in the exact same block.
+    - **Cluster Math**: Identifies sequential address patterns and hex-prefix overlaps.
+    - **Funding Analysis**: Detects "Mother Wallet" fan-out patterns and identical small-amount funding across multiple accounts.
 - **📊 Interactive Dashboard**: Visualizes risk scores (Safe, Suspicious, Flagged) with live feed updates, cluster graphs, and real-time statistics.
 - **📡 Server-Sent Events (SSE)**: Efficient server-to-client event pipeline that minimizes latency and frontend overhead.
 - **🏗️ Scalable Architecture**: Built with Next.js 14, viem, and TypeScript for a robust developer experience.
@@ -58,18 +63,19 @@ To see the dashboard in action without executing live transactions on the testne
 
 ## 📂 Project Structure
 - `/app/api/events/route.ts`: Core SSE route handling the Reactivity SDK subscription.
-- `/lib/heuristics.ts`: The risk scoring logic (0-100 score).
+- `/lib/reactivity.ts`: SDK setup and WebSocket subscription logic.
+- `/lib/heuristics.ts`: The risk scoring engine (0-100 score).
 - `/lib/onchain.ts`: RPC helpers for fetching wallet metadata (balances, nonces).
 - `/components`: Modular UI components for the dashboard, stats, and live feed.
-
-## 📝 For Developers
-For details on how the Reactivity SDK integration was solved and technical implementation notes, please refer to the [DEV_HANDOFF.md](./DEV_HANDOFF.md).
+- `middleware.ts`: Security headers and CSP configuration.
+- `next.config.mjs`: Next.js configuration.
 
 ## 🏆 Hackathon Status
 Created for the **Somnia Reactivity Hackathon 2026** (DoraHacks).
 - **Network**: Somnia Shannon Testnet
 - **Chain ID**: 50312
 - **Developer**: [_mprime](https://x.com/_mprime)
+- **Developer**: [banny](https://x.com/oboh_banny18)
 
 ---
 *Built with ❤️ on Somnia*
