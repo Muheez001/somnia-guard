@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { WalletProfile, WalletEvent, Stats } from '@/lib/types';
 import { calculateRiskScore, getRiskLevel, buildInitialProfile } from '@/lib/heuristics';
 import { saveProfiles, loadProfiles, clearProfiles } from '@/lib/storage';
@@ -170,12 +171,13 @@ export default function Dashboard() {
               display: 'flex', alignItems: 'center', gap: 10,
               textDecoration: 'none', color: 'inherit',
             }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: 7,
-                background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-purple))',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 13, fontWeight: 700, color: '#080a0e',
-              }}>S</div>
+              <Image 
+                src="/logo.png" 
+                alt="SomniaGuard Logo" 
+                width={28} 
+                height={28} 
+                style={{ borderRadius: 7 }} 
+              />
               <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: 1 }}>
                 SOMNIAGUARD
               </span>

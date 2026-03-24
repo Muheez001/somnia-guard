@@ -103,13 +103,13 @@ export default function LandingPage() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: 'linear-gradient(135deg, var(--accent-purple), var(--accent-pink))',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 16, fontWeight: 700, color: '#fff',
-              boxShadow: '0 0 20px rgba(168,85,247,0.4)',
-            }}>S</div>
+            <Image 
+              src="/logo.png" 
+              alt="SomniaGuard Logo" 
+              width={32} 
+              height={32} 
+              style={{ borderRadius: 8, boxShadow: '0 0 20px rgba(168,85,247,0.4)', objectFit: 'cover' }} 
+            />
             <span style={{
               fontSize: 16, fontWeight: 700, letterSpacing: 2,
               background: 'linear-gradient(135deg, #fff, var(--accent-purple))',
