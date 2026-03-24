@@ -3,7 +3,8 @@ export type RiskLevel = 'SAFE' | 'SUSPICIOUS' | 'FLAGGED';
 export interface WalletEvent {
   id: string;
   address: string;
-  questId: number;
+  fromAddress?: string; // Funding source
+  amount?: string;      // Amount received
   timestamp: number;
   blockNumber: number;
 }

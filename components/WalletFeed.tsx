@@ -52,7 +52,7 @@ export default function WalletFeed({
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16
             }}>
               <Loader2 size={32} className="animate-spin" style={{ opacity: 0.4 }} />
-              Listening for quest claims...
+              Listening for network transfers...
             </div>
           ) : (
             [...profiles].reverse().map((profile) => (
@@ -103,7 +103,7 @@ export default function WalletFeed({
                       {shortAddr(profile.address)}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                      {profile.claims.length} claim{profile.claims.length !== 1 ? 's' : ''}
+                      {profile.claims.length} transfer{profile.claims.length !== 1 ? 's' : ''}
                       {' · '}
                       {timeAgo(profile.claims[profile.claims.length - 1].timestamp)}
                     </div>
@@ -144,7 +144,7 @@ export default function WalletFeed({
               fontSize: 11, color: 'var(--text-muted)',
               letterSpacing: 2, marginBottom: 14,
             }}>
-              WALLET DETAIL
+              WALLET FUNDING DETAIL
             </div>
             <div style={{
               fontFamily: 'var(--font-geist-mono), monospace', fontSize: 13,
@@ -162,7 +162,7 @@ export default function WalletFeed({
             }}>
               {[
                 { label: 'RISK SCORE', value: `${selectedProfile.riskScore}/100` },
-                { label: 'TOTAL CLAIMS', value: selectedProfile.claims.length },
+                { label: 'TOTAL INBOUND', value: selectedProfile.claims.length },
               ].map((item) => (
                 <div key={item.label} style={{
                   padding: '12px 14px',
@@ -218,7 +218,7 @@ export default function WalletFeed({
                 fontSize: 11, color: 'var(--text-muted)',
                 letterSpacing: 2, marginBottom: 10,
               }}>
-                CLAIM HISTORY
+                FUNDING HISTORY
               </div>
               {selectedProfile.claims.map((claim, i) => (
                 <div key={i} style={{
@@ -229,7 +229,10 @@ export default function WalletFeed({
                   marginBottom: 4,
                   fontFamily: 'var(--font-geist-mono), monospace',
                 }}>
-                  Quest #{claim.questId} · {timeAgo(claim.timestamp)}
+                  {claim.amount} STT · {timeAgo(claim.timestamp)}
+                  <div style={{ fontSize: 10, opacity: 0.6, marginTop: 4 }}>
+                    From: {claim.fromAddress ? shortAddr(claim.fromAddress) : 'Unknown'}
+                  </div>
                 </div>
               ))}
             </div>

@@ -10,13 +10,15 @@ import WalletFeed from '@/components/WalletFeed';
 import ClaimSimulator from '@/components/ClaimSimulator';
 import ActivityChart from '@/components/ActivityChart';
 import ClusterGraph from '@/components/ClusterGraph';
-import { Activity, AlertCircle, ArrowRight } from 'lucide-react';
+import LiveExplorer from '@/components/LiveExplorer';
+import { Activity, AlertCircle, ArrowRight, Zap, Search } from 'lucide-react';
 
 export default function Dashboard() {
   const [profiles, setProfiles] = useState<Map<string, WalletProfile>>(new Map());
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
+  const [activeTab, setActiveTab] = useState<'sybil' | 'explorer'>('sybil');
 
   const profilesArray = Array.from(profiles.values());
 
@@ -257,47 +259,105 @@ export default function Dashboard() {
       }}>
         <StatsBar stats={stats} />
 
+        {/* Tab Selection */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 20,
+          marginBottom: 20,
+          borderBottom: '1px solid var(--border-glass)',
+          paddingBottom: 4,
+        }}>
+          {[
+            { id: 'sybil' as const, label: 'SYBIL ANALYSIS', icon: Activity },
+            { id: 'explorer' as const, label: 'LIVE EXPLORER', icon: Search },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '8px 4px 12px',
+                background: 'none',
+                border: 'none',
+                color: activeTab === tab.id ? 'var(--accent-teal)' : 'var(--text-muted)',
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 2,
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'color 0.2s',
+              }}
+            >
+              <tab.icon size={14} />
+              {tab.label}
+              {activeTab === tab.id && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: -1,
+                  left: 0,
+                  right: 0,
+                  height: 2,
+                  background: 'var(--accent-teal)',
+                  boxShadow: '0 0 10px rgba(0,229,160,0.5)',
+                  borderRadius: '2px 2px 0 0',
+                }} />
+              )}
+            </button>
+          ))}
+        </div>
+
         <div className="dashboard-layout" style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 280px',
+          gridTemplateColumns: activeTab === 'sybil' ? '1fr 280px' : '1fr',
           gap: 16,
           alignItems: 'start',
         }}>
-          <WalletFeed profiles={profilesArray} />
+          <div className="tab-container" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {activeTab === 'sybil' ? (
+              <WalletFeed profiles={profilesArray} />
+            ) : (
+              <LiveExplorer />
+            )}
+          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <ActivityChart totalClaims={totalClaims} />
-            <ClusterGraph profiles={profilesArray} />
-            <ClaimSimulator onSimulateEvent={processEvent} />
+          {activeTab === 'sybil' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <ActivityChart totalClaims={totalClaims} />
+              <ClusterGraph profiles={profilesArray} />
+              <ClaimSimulator onSimulateEvent={processEvent} />
 
-            {/* Network Info Card */}
-            <div className="glass-card-static" style={{ padding: '20px' }}>
-              <div style={{
-                fontSize: 10, letterSpacing: 2,
-                color: 'var(--text-muted)', marginBottom: 12,
-              }}>
-                NETWORK
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {[
-                  { label: 'Chain', value: 'Somnia Testnet' },
-                  { label: 'Chain ID', value: '50312' },
-                  { label: 'Protocol', value: 'Reactivity SSE' },
-                ].map((row) => (
-                  <div key={row.label} style={{
-                    display: 'flex', justifyContent: 'space-between',
-                    fontSize: 12,
-                  }}>
-                    <span style={{ color: 'var(--text-muted)' }}>{row.label}</span>
-                    <span style={{
-                      color: 'var(--text-secondary)',
-                      fontFamily: 'var(--font-geist-mono), monospace',
-                    }}>{row.value}</span>
-                  </div>
-                ))}
+              {/* Network Info Card */}
+              <div className="glass-card-static" style={{ padding: '20px' }}>
+                <div style={{
+                  fontSize: 10, letterSpacing: 2,
+                  color: 'var(--text-muted)', marginBottom: 12,
+                }}>
+                  NETWORK
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[
+                    { label: 'Chain', value: 'Somnia Testnet' },
+                    { label: 'Chain ID', value: '50312' },
+                    { label: 'Protocol', value: 'Reactivity SSE' },
+                  ].map((row) => (
+                    <div key={row.label} style={{
+                      display: 'flex', justifyContent: 'space-between',
+                      fontSize: 12,
+                    }}>
+                      <span style={{ color: 'var(--text-muted)' }}>{row.label}</span>
+                      <span style={{
+                        color: 'var(--text-secondary)',
+                        fontFamily: 'var(--font-geist-mono), monospace',
+                      }}>{row.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -306,6 +366,13 @@ export default function Dashboard() {
           .dashboard-layout {
             grid-template-columns: 1fr !important;
           }
+        }
+        .tab-container {
+          animation: fade-up 0.4s ease-out forwards;
+        }
+        @keyframes fade-up {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </main>
