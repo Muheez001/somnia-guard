@@ -2,7 +2,7 @@
 
 **Real-time Bot & Sybil Detection for the Somnia Reactivity Hackathon 2026**
 
-![Somnia Guard Banner](/Public/banner.png)
+![Somnia Guard Banner](/public/banner.png)
 
 ## 🌐 Overview
 Somnia Guard is a real-time on-chain security dashboard designed to protect quests, airdrops, and fair-mints on the **Somnia Network**. Traditional Sybil detection often relies on post-transaction indexing, allowing malicious bots to extract value before they are even flagged. 
