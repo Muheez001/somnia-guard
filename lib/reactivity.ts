@@ -91,7 +91,7 @@ export async function subscribeToQuestEvents(
           participant,
           questId,
           timestamp: timestamp || Math.floor(Date.now() / 1000),
-          blockNumber: (data.result as any)?.blockNumber ?? 0,
+          blockNumber: (data.result as { blockNumber?: number })?.blockNumber ?? 0,
         });
       } catch (err) {
         console.error("Parse error:", err);

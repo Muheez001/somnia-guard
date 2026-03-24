@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Activity, Database, Zap, Cpu, History, AlertCircle, RefreshCw, Pause, Play, ChevronUp } from 'lucide-react';
+import { Activity, Database, History, AlertCircle, RefreshCw, Pause, Play } from 'lucide-react';
 
 interface Block {
   number: number;

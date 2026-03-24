@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { WalletProfile, WalletEvent, Stats } from '@/lib/types';
 import { calculateRiskScore, getRiskLevel, buildInitialProfile } from '@/lib/heuristics';
@@ -11,7 +11,7 @@ import ClaimSimulator from '@/components/ClaimSimulator';
 import ActivityChart from '@/components/ActivityChart';
 import ClusterGraph from '@/components/ClusterGraph';
 import LiveExplorer from '@/components/LiveExplorer';
-import { Activity, AlertCircle, ArrowRight, Zap, Search } from 'lucide-react';
+import { Activity, AlertCircle, Search } from 'lucide-react';
 
 export default function Dashboard() {
   const [profiles, setProfiles] = useState<Map<string, WalletProfile>>(new Map());

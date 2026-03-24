@@ -55,7 +55,6 @@ export default function ActivityChart({ totalClaims }: ActivityChartProps) {
   }, []);
 
   const maxCount = Math.max(...dataPoints.map((d) => d.count), 1);
-  const chartW = 100; // percentage
   const chartH = 80;
 
   return (
