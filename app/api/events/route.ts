@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest } from 'next/server';
-import { createPublicClient, webSocket, defineChain, keccak256, toBytes } from 'viem';
-import { SDK } from '@somnia-chain/reactivity';
+import { createPublicClient, webSocket, defineChain, formatEther } from 'viem';
 
 const somniaTestnet = defineChain({
   id: 50312,
@@ -13,46 +11,28 @@ const somniaTestnet = defineChain({
       webSocket: ['wss://api.infra.testnet.somnia.network/ws'],
     },
   },
-  blockExplorers: {
-    default: {
-      name: 'Somnia Explorer',
-      url: 'https://shannon-explorer.somnia.network',
-    },
-  },
 });
 
-// Define the correct event signature for QuestClaimed
-
-const QUEST_CLAIMED_TOPIC = keccak256(
-  toBytes('QuestClaimed(address,uint256,uint256)')
-);
-
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-
 export const dynamic = 'force-dynamic';
 
-// ── Demo simulation helpers ─────────────────────────────────────────
-const DEMO_WALLETS = [
-  '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD28',
-  '0x53d284357ec70cE289D6D64134DfAc8E511c8a3C',
-  '0xFBb1b73C4f0BDa4f67dcA266ce6Ef42f520fBB98',
-  '0x1B3cB81E51011b549d78bf720b0d924ac763A7C2',
-  '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B',
-  '0xBE0EB53F46CD790Cd13851d5EFF43D12404d33E8',
-  '0xDA9dfA130Df4dE4673b89022EE50ff26f6EA73Cf',
-  // Sybil cluster — addresses with similar suffixes for heuristic testing
-  '0x000000000000000000000000000000000000fA01',
-  '0x000000000000000000000000000000000000fA02',
-  '0x000000000000000000000000000000000000fA03',
-];
-
-function randomDemoEvent() {
-  const wallet = DEMO_WALLETS[Math.floor(Math.random() * DEMO_WALLETS.length)];
+// ── Demo simulation ──────────────────────────────────────────────────
+function randomTransfer() {
+  const wallets = [
+    '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD28',
+    '0x53d284357ec70cE289D6D64134DfAc8E511c8a3C',
+    '0xFBb1b73C4f0BDa4f67dcA266ce6Ef42f520fBB98',
+    // Example Sybil cluster
+    '0x000000000000000000000000000000000000bA01',
+    '0x000000000000000000000000000000000000bA02',
+    '0x000000000000000000000000000000000000bA03',
+  ];
   return {
-    participant: wallet,
-    questId: Math.floor(Math.random() * 5) + 1,
+    participant: wallets[Math.floor(Math.random() * wallets.length)],
+    amount: '0.1',
+    from: '0x1234Fauc3t456789012345678901234567890123', // Common sender
     timestamp: Math.floor(Date.now() / 1000),
-    blockNumber: 1_000_000 + Math.floor(Math.random() * 50_000),
+    blockNumber: 1_200_000,
   };
 }
 
@@ -62,101 +42,50 @@ export async function GET(req: NextRequest) {
 
   const stream = new ReadableStream({
     async start(controller) {
-      // Keep-alive ping every 20 s
-      const keepAlive = setInterval(() => {
-        try { controller.enqueue(encoder.encode(': ping\n\n')); } catch { /* stream closed */ }
-      }, 20_000);
-
-      const cleanup = () => {
-        clearInterval(keepAlive);
-      };
-
-      req.signal.addEventListener('abort', () => {
-        cleanup();
-        try { controller.close(); } catch { /* already closed */ }
-      });
-
-      // ── Demo / simulation mode ──────────────────────────────────
       if (DEMO_MODE) {
-        console.log('[SomniaGuard] Demo mode active — generating simulated events');
-        const demoInterval = setInterval(() => {
+        const interval = setInterval(() => {
           try {
-            const event = randomDemoEvent();
-            console.log('[DEMO] Sending simulated event:', event);
+            const event = randomTransfer();
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
-          } catch {
-            clearInterval(demoInterval);
-          }
-        }, 3_000 + Math.random() * 4_000); // every 3-7 seconds
-
-        req.signal.addEventListener('abort', () => clearInterval(demoInterval));
+          } catch { clearInterval(interval); }
+        }, 4000);
+        req.signal.addEventListener('abort', () => clearInterval(interval));
         return;
       }
 
-      // ── Live Reactivity subscription ────────────────────────────
+      // ── Live STT Transfer Monitor ────────────────────────────────
       try {
         const publicClient = createPublicClient({
           chain: somniaTestnet,
-          transport: webSocket(), // SDK requires webSocket, NOT http
+          transport: webSocket(),
         });
 
-        const sdk = new SDK({ public: publicClient });
+        const unwatch = publicClient.watchBlocks({
+          includeTransactions: true,
+          onBlock: (block) => {
+            block.transactions.forEach((tx: any) => {
+              // We only care about base STT transfers (value > 0)
+              if (tx.value > BigInt(0)) {
+                const event = {
+                  participant: tx.to,      // Recipient
+                  fromAddress: tx.from,    // Sender (Funding source)
+                  amount: formatEther(tx.value),
+                  timestamp: Number(block.timestamp),
+                  blockNumber: Number(block.number),
+                  hash: tx.hash
+                };
 
-        const result: any = await sdk.subscribe({
-          ethCalls: [],
-          eventContractSources: [
-            process.env.NEXT_PUBLIC_QUEST_REGISTRY as `0x${string}`,
-          ],
-          topicOverrides: [QUEST_CLAIMED_TOPIC],
-          onData: (data: any) => {
-            try {
-              console.log('=== SERVER EVENT ===', JSON.stringify(data));
-
-              const topics = data?.result?.topics;
-              if (!topics || topics.length < 2) return;
-
-              const participant = '0x' + topics[1].slice(-40);
-              const questId = topics[2] ? parseInt(topics[2], 16) : 0;
-              const blockNumber = data?.result?.blockNumber ?? 0;
-
-              const event = {
-                participant,
-                questId,
-                timestamp: Math.floor(Date.now() / 1000),
-                blockNumber,
-              }; 
-
-              console.log('Sending event to client:', event);
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
-            } catch (err) {
-              console.error('Parse error:', err);
-            }
+                console.log('[NativeTransfer] Detected:', event.participant, 'from:', event.fromAddress);
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+              }
+            });
           },
-          onError: (err: any) => {
-            console.error('SDK error:', err);
-          },
-          onlyPushChanges: false,
+          onError: (err) => console.error('Transfer Watch Error:', err)
         });
 
-        // SDK returns Error object on failure instead of throwing
-        if (result instanceof Error) {
-          console.error('SDK subscribe failed:', result.message);
-          const errorMsg = `data: ${JSON.stringify({ error: result.message })}\n\n`;
-          controller.enqueue(encoder.encode(errorMsg));
-          return;
-        }
-
-        console.log('Server subscribed to QuestClaimed events');
-
-        req.signal.addEventListener('abort', () => {
-          if (result && typeof result.unsubscribe === 'function') {
-            result.unsubscribe();
-          }
-        });
+        req.signal.addEventListener('abort', unwatch);
       } catch (err) {
-        console.error('Stream setup error:', err);
-        const errorMsg = `data: ${JSON.stringify({ error: String(err) })}\n\n`;
-        try { controller.enqueue(encoder.encode(errorMsg)); } catch { /* stream closed */ }
+        console.error('SSE Stream error:', err);
       }
     },
   });
