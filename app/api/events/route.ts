@@ -63,9 +63,9 @@ export async function GET(req: NextRequest) {
         const unwatch = publicClient.watchBlocks({
           includeTransactions: true,
           onBlock: (block) => {
-            block.transactions.forEach((tx: any) => {
-              // We only care about base STT transfers (value > 0)
-              if (tx.value > BigInt(0)) {
+            block.transactions.forEach((tx: { value: bigint; to: string | null; from: string; hash: string }) => {
+              // We only care about base STT transfers (value > 0) to a valid address
+              if (tx.value > BigInt(0) && tx.to) {
                 const event = {
                   participant: tx.to,      // Recipient
                   fromAddress: tx.from,    // Sender (Funding source)

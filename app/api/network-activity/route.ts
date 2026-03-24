@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createPublicClient, webSocket, http, defineChain } from 'viem';
+import { createPublicClient, webSocket, defineChain } from 'viem';
 
 const somniaTestnet = defineChain({
   id: 50312,
@@ -32,10 +32,10 @@ export async function GET(req: NextRequest) {
 
       console.log('[NetworkActivity] Starting live block listener with WS:', wsUrl);
 
-      const sendEvent = (data: any) => {
+      const sendEvent = (data: unknown) => {
         try {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
-        } catch (e) {
+        } catch {
           // Stream might be closed
         }
       };
@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
           });
         },
         onError: (err) => {
-          const errMsg = err instanceof Error ? err.message : (err as any)?.message || 'WebSocket Error';
+          const errMsg = err instanceof Error ? err.message : (err as { message?: string })?.message || 'WebSocket Error';
           console.error('[NetworkActivity] Watch error:', errMsg);
           sendEvent({ type: 'error', message: errMsg });
         }

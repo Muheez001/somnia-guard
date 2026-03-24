@@ -43,7 +43,6 @@ export default function Dashboard() {
       const walletEvent: WalletEvent = {
         id: `${event.participant}-${event.timestamp}-${Math.random().toString(36).slice(2, 6)}`,
         address: event.participant,
-        questId: event.questId,
         timestamp: event.timestamp,
         blockNumber: event.blockNumber,
       };
